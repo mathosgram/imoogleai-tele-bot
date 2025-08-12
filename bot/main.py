@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 
 from plugin_manager import PluginManager
-from openai_helper import OpenAIHelper, default_max_tokens, are_functions_available
+from ai_helper import AIHelper, default_max_tokens, are_functions_available
 from telegram_bot import ChatGPTTelegramBot
 
 
@@ -20,18 +20,40 @@ def main():
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     # Check if the required environment variables are set
-    required_values = ['TELEGRAM_BOT_TOKEN', 'OPENAI_API_KEY']
+    required_values = ['TELEGRAM_BOT_TOKEN']
+    
+    # Determine which AI provider API keys are needed based on the model
+    model = os.environ.get('AI_MODEL', 'gpt-4o')
+    
+    # Check for provider-specific API keys
+    if model.startswith('gpt-') or model.startswith('o1') or model.startswith('davinci') or model.startswith('text-'):
+        required_values.append('OPENAI_API_KEY')
+    elif model.startswith('gemini'):
+        required_values.append('GEMINI_API_KEY')
+    elif 'fireworks' in model or model.startswith('accounts/fireworks'):
+        required_values.append('FIREWORKS_API_KEY')
+    else:
+        # Default to OpenAI if model format is unclear
+        required_values.append('OPENAI_API_KEY')
+    
     missing_values = [value for value in required_values if os.environ.get(value) is None]
     if len(missing_values) > 0:
         logging.error(f'The following environment values are missing in your .env: {", ".join(missing_values)}')
         exit(1)
 
     # Setup configurations
-    model = os.environ.get('OPENAI_MODEL', 'gpt-4o')
+    # Use AI_MODEL instead of OPENAI_MODEL for generic model selection
+    model = os.environ.get('AI_MODEL', os.environ.get('OPENAI_MODEL', 'gpt-4o'))
     functions_available = are_functions_available(model=model)
     max_tokens_default = default_max_tokens(model=model)
-    openai_config = {
-        'api_key': os.environ['OPENAI_API_KEY'],
+    
+    ai_config = {
+        # Provider API keys
+        'openai_api_key': os.environ.get('OPENAI_API_KEY'),
+        'gemini_api_key': os.environ.get('GEMINI_API_KEY'),
+        'fireworks_api_key': os.environ.get('FIREWORKS_API_KEY'),
+        
+        # General configuration
         'show_usage': os.environ.get('SHOW_USAGE', 'false').lower() == 'true',
         'stream': os.environ.get('STREAM', 'true').lower() == 'true',
         'proxy': os.environ.get('PROXY', None) or os.environ.get('OPENAI_PROXY', None),
@@ -41,10 +63,8 @@ def main():
         'max_tokens': int(os.environ.get('MAX_TOKENS', max_tokens_default)),
         'n_choices': int(os.environ.get('N_CHOICES', 1)),
         'temperature': float(os.environ.get('TEMPERATURE', 1.0)),
-        'image_model': os.environ.get('IMAGE_MODEL', 'dall-e-2'),
-        'image_quality': os.environ.get('IMAGE_QUALITY', 'standard'),
-        'image_style': os.environ.get('IMAGE_STYLE', 'vivid'),
-        'image_size': os.environ.get('IMAGE_SIZE', '512x512'),
+        
+        # Model configuration
         'model': model,
         'enable_functions': os.environ.get('ENABLE_FUNCTIONS', str(functions_available)).lower() == 'true',
         'functions_max_consecutive_calls': int(os.environ.get('FUNCTIONS_MAX_CONSECUTIVE_CALLS', 10)),
@@ -52,17 +72,27 @@ def main():
         'frequency_penalty': float(os.environ.get('FREQUENCY_PENALTY', 0.0)),
         'bot_language': os.environ.get('BOT_LANGUAGE', 'en'),
         'show_plugins_used': os.environ.get('SHOW_PLUGINS_USED', 'false').lower() == 'true',
+        
+        # Image generation (mainly for OpenAI)
+        'image_model': os.environ.get('IMAGE_MODEL', 'dall-e-2'),
+        'image_quality': os.environ.get('IMAGE_QUALITY', 'standard'),
+        'image_style': os.environ.get('IMAGE_STYLE', 'vivid'),
+        'image_size': os.environ.get('IMAGE_SIZE', '512x512'),
+        
+        # Audio/Speech configuration
         'whisper_prompt': os.environ.get('WHISPER_PROMPT', ''),
-        'vision_model': os.environ.get('VISION_MODEL', 'gpt-4o'),
+        'tts_model': os.environ.get('TTS_MODEL', 'tts-1'),
+        'tts_voice': os.environ.get('TTS_VOICE', 'alloy'),
+        
+        # Vision configuration
+        'vision_model': os.environ.get('VISION_MODEL', model),  # Use the main model for vision by default
         'enable_vision_follow_up_questions': os.environ.get('ENABLE_VISION_FOLLOW_UP_QUESTIONS', 'true').lower() == 'true',
         'vision_prompt': os.environ.get('VISION_PROMPT', 'What is in this image'),
         'vision_detail': os.environ.get('VISION_DETAIL', 'auto'),
         'vision_max_tokens': int(os.environ.get('VISION_MAX_TOKENS', '300')),
-        'tts_model': os.environ.get('TTS_MODEL', 'tts-1'),
-        'tts_voice': os.environ.get('TTS_VOICE', 'alloy'),
     }
 
-    if openai_config['enable_functions'] and not functions_available:
+    if ai_config['enable_functions'] and not functions_available:
         logging.error(f'ENABLE_FUNCTIONS is set to true, but the model {model} does not support it. '
                         'Please set ENABLE_FUNCTIONS to false or use a model that supports it.')
         exit(1)
@@ -106,10 +136,10 @@ def main():
         'plugins': os.environ.get('PLUGINS', '').split(',')
     }
 
-    # Setup and run ChatGPT and Telegram bot
+    # Setup and run AI-powered Telegram bot
     plugin_manager = PluginManager(config=plugin_config)
-    openai_helper = OpenAIHelper(config=openai_config, plugin_manager=plugin_manager)
-    telegram_bot = ChatGPTTelegramBot(config=telegram_config, openai=openai_helper)
+    ai_helper = AIHelper(config=ai_config, plugin_manager=plugin_manager)
+    telegram_bot = ChatGPTTelegramBot(config=telegram_config, openai=ai_helper)
     telegram_bot.run()
 
 
