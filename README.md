@@ -1,10 +1,12 @@
-# ChatGPT Telegram Bot
+# Multi-Provider AI Telegram Bot
 ![python-version](https://img.shields.io/badge/python-3.9-blue.svg)
 [![openai-version](https://img.shields.io/badge/openai-1.58.1-orange.svg)](https://openai.com/)
+[![gemini-version](https://img.shields.io/badge/gemini-latest-blue.svg)](https://ai.google.dev/)
+[![fireworks-version](https://img.shields.io/badge/fireworks-latest-red.svg)](https://fireworks.ai/)
 [![license](https://img.shields.io/badge/License-GPL%202.0-brightgreen.svg)](LICENSE)
 [![Publish Docker image](https://github.com/n3d1117/chatgpt-telegram-bot/actions/workflows/publish.yaml/badge.svg)](https://github.com/n3d1117/chatgpt-telegram-bot/actions/workflows/publish.yaml)
 
-A [Telegram bot](https://core.telegram.org/bots/api) that integrates with OpenAI's _official_ [ChatGPT](https://openai.com/blog/chatgpt/), [DALL·E](https://openai.com/product/dall-e-2) and [Whisper](https://openai.com/research/whisper) APIs to provide answers. Ready to use with minimal configuration required.
+A versatile [Telegram bot](https://core.telegram.org/bots/api) that integrates with multiple AI providers including **OpenAI** (ChatGPT, DALL·E, Whisper), **Google Gemini**, and **Fireworks AI**. Switch between different AI models seamlessly while maintaining all the powerful features you love. Ready to use with minimal configuration required.
 
 ## Screenshots
 
@@ -15,33 +17,37 @@ A [Telegram bot](https://core.telegram.org/bots/api) that integrates with OpenAI
 ![plugins](https://github.com/n3d1117/chatgpt-telegram-bot/assets/11541888/83d5e0cd-e09a-463d-a292-722f919e929f)
 
 ## Features
+
+### 🚀 Multi-Provider AI Support
+- [x] **OpenAI Models**: GPT-4o, GPT-4, GPT-3.5-turbo, o1, o1-mini
+- [x] **Google Gemini Models**: gemini-2.0-flash-exp, gemini-1.5-pro, gemini-1.5-flash, gemini-pro
+- [x] **Fireworks AI Models**: Llama 3.1 (405B, 70B, 8B), Mixtral 8x7B, Qwen2.5 72B
+- [x] **Seamless Model Switching**: Change AI provider by simply updating the `AI_MODEL` environment variable
+
+### 🎯 Core Features
 - [x] Support markdown in answers
 - [x] Reset conversation with the `/reset` command
 - [x] Typing indicator while generating a response
 - [x] Access can be restricted by specifying a list of allowed users
 - [x] Docker and Proxy support
-- [x] Image generation using DALL·E via the `/image` command
-- [x] Transcribe audio and video messages using Whisper (may require [ffmpeg](https://ffmpeg.org))
 - [x] Automatic conversation summary to avoid excessive token usage
 - [x] Track token usage per user - by [@AlexHTW](https://github.com/AlexHTW)
 - [x] Get personal token usage statistics via the `/stats` command - by [@AlexHTW](https://github.com/AlexHTW)
 - [x] User budgets and guest budgets - by [@AlexHTW](https://github.com/AlexHTW)
 - [x] Stream support
-- [x] GPT-4 support
-  - If you have access to the GPT-4 API, simply change the `OPENAI_MODEL` parameter to `gpt-4`
 - [x] Localized bot language
   - Available languages :brazil: :cn: :finland: :de: :indonesia: :iran: :it: :malaysia: :netherlands: :poland: :ru: :saudi_arabia: :es: :taiwan: :tr: :ukraine: :gb: :uzbekistan: :vietnam: :israel:
 - [x] Improved inline queries support for group and private chats - by [@bugfloyd](https://github.com/bugfloyd)
   - To use this feature, enable inline queries for your bot in BotFather via the `/setinline` [command](https://core.telegram.org/bots/inline)
-- [x] Support *new models* [announced on June 13, 2023](https://openai.com/blog/function-calling-and-other-api-updates)
+
+### 🎨 Media & Advanced Features  
+- [x] Image generation using DALL·E via the `/image` command (OpenAI only)
+- [x] Transcribe audio and video messages using Whisper (OpenAI only, may require [ffmpeg](https://ffmpeg.org))
+- [x] Text-to-speech support (OpenAI only)
+- [x] Vision support for image interpretation (OpenAI & Gemini models)
 - [x] Support *functions* (plugins) to extend the bot's functionality with 3rd party services
   - Weather, Spotify, Web search, text-to-speech and more. See [here](#available-plugins) for a list of available plugins
 - [x] Support unofficial OpenAI-compatible APIs - by [@kristaller486](https://github.com/kristaller486)
-- [x] (NEW!) Support GPT-4 Turbo and DALL·E 3 [announced on November 6, 2023](https://openai.com/blog/new-models-and-developer-products-announced-at-devday) - by [@AlexHTW](https://github.com/AlexHTW)
-- [x] (NEW!) Text-to-speech support [announced on November 6, 2023](https://platform.openai.com/docs/guides/text-to-speech) - by [@gilcu3](https://github.com/gilcu3)
-- [x] (NEW!) Vision support [announced on November 6, 2023](https://platform.openai.com/docs/guides/vision) - by [@gilcu3](https://github.com/gilcu3)
-- [x] (NEW!) GPT-4o model support [announced on May 12, 2024](https://openai.com/index/hello-gpt-4o/) - by [@err09r](https://github.com/err09r)
-- [x] (NEW!) o1 and o1-mini model preliminary support
 
 ## Additional features - help needed!
 If you'd like to help, check out the [issues](https://github.com/n3d1117/chatgpt-telegram-bot/issues) section and contribute!  
@@ -52,7 +58,10 @@ PRs are always welcome!
 ## Prerequisites
 - Python 3.9+
 - A [Telegram bot](https://core.telegram.org/bots#6-botfather) and its token (see [tutorial](https://core.telegram.org/bots/tutorial#obtain-your-bot-token))
-- An [OpenAI](https://openai.com) account (see [configuration](#configuration) section)
+- **At least one** of the following AI provider accounts:
+  - [OpenAI](https://openai.com) account for GPT models
+  - [Google AI Studio](https://ai.google.dev/) account for Gemini models  
+  - [Fireworks AI](https://fireworks.ai/) account for open-source models
 
 ## Getting started
 
@@ -61,10 +70,38 @@ Customize the configuration by copying `.env.example` and renaming it to `.env`,
 
 | Parameter                   | Description                                                                                                                                                                                                                   |
 |-----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `OPENAI_API_KEY`            | Your OpenAI API key, you can get it from [here](https://platform.openai.com/account/api-keys)                                                                                                                                 |
 | `TELEGRAM_BOT_TOKEN`        | Your Telegram bot's token, obtained using [BotFather](http://t.me/botfather) (see [tutorial](https://core.telegram.org/bots/tutorial#obtain-your-bot-token))                                                                  |
+| `AI_MODEL`                  | The AI model to use. See [Supported Models](#supported-models) for available options                                                                                                                                        |
+| `OPENAI_API_KEY`            | Your OpenAI API key (required for OpenAI models), get it from [here](https://platform.openai.com/account/api-keys)                                                                                                          |
+| `GEMINI_API_KEY`            | Your Google AI API key (required for Gemini models), get it from [Google AI Studio](https://ai.google.dev/)                                                                                                                 |
+| `FIREWORKS_API_KEY`         | Your Fireworks AI API key (required for Fireworks models), get it from [Fireworks AI](https://fireworks.ai/)                                                                                                                |
 | `ADMIN_USER_IDS`            | Telegram user IDs of admins. These users have access to special admin commands, information and no budget restrictions. Admin IDs don't have to be added to `ALLOWED_TELEGRAM_USER_IDS`. **Note**: by default, no admin (`-`) |
 | `ALLOWED_TELEGRAM_USER_IDS` | A comma-separated list of Telegram user IDs that are allowed to interact with the bot (use [getidsbot](https://t.me/getidsbot) to find your user ID). **Note**: by default, *everyone* is allowed (`*`)                       |
+
+### Supported Models
+
+| Provider | Model Name | Capabilities | Context Length |
+|----------|------------|-------------|----------------|
+| **OpenAI** | `gpt-4o` | Chat, Vision, Functions | 128k tokens |
+| **OpenAI** | `gpt-4o-mini` | Chat, Vision, Functions | 128k tokens |
+| **OpenAI** | `gpt-4` | Chat, Functions | 8k tokens |
+| **OpenAI** | `gpt-3.5-turbo` | Chat, Functions | 4k tokens |
+| **OpenAI** | `o1` | Chat (Advanced Reasoning) | 100k tokens |
+| **OpenAI** | `o1-mini` | Chat (Advanced Reasoning) | 65k tokens |
+| **Gemini** | `gemini-2.0-flash-exp` | Chat, Vision, Functions | 1M tokens |
+| **Gemini** | `gemini-1.5-pro` | Chat, Vision, Functions | 2M tokens |
+| **Gemini** | `gemini-1.5-flash` | Chat, Vision, Functions | 1M tokens |
+| **Gemini** | `gemini-pro` | Chat | 32k tokens |
+| **Fireworks** | `accounts/fireworks/models/llama-v3p1-405b-instruct` | Chat, Functions | 131k tokens |
+| **Fireworks** | `accounts/fireworks/models/llama-v3p1-70b-instruct` | Chat, Functions | 131k tokens |
+| **Fireworks** | `accounts/fireworks/models/llama-v3p1-8b-instruct` | Chat, Functions | 131k tokens |
+| **Fireworks** | `accounts/fireworks/models/mixtral-8x7b-instruct` | Chat, Functions | 32k tokens |
+
+**Notes:**
+- Only provide the API key for the provider you want to use
+- Image generation and TTS are currently only available with OpenAI models
+- Vision support is available for OpenAI and Gemini models
+- Function calling (plugins) is supported by most models except o1 series
 
 ### Optional configuration
 The following parameters are optional and can be set in the `.env` file:
@@ -94,7 +131,8 @@ Check out the [Budget Manual](https://github.com/n3d1117/chatgpt-telegram-bot/di
 | `PROXY`                             | Proxy to be used for OpenAI and Telegram bot (e.g. `http://localhost:8080`)                                                                                                                                                                                                             | -                                  |
 | `OPENAI_PROXY`                      | Proxy to be used only for OpenAI (e.g. `http://localhost:8080`)                                                                                                                                                                                                                         | -                                  |
 | `TELEGRAM_PROXY`                    | Proxy to be used only for Telegram bot (e.g. `http://localhost:8080`)                                                                                                                                                                                                                   | -                                  |
-| `OPENAI_MODEL`                      | The OpenAI model to use for generating responses. You can find all available models [here](https://platform.openai.com/docs/models/)                                                                                                                                                    | `gpt-4o`                           |
+| `AI_MODEL`                          | The AI model to use for generating responses. Can be OpenAI, Gemini, or Fireworks model. See [Supported Models](#supported-models) table above                                                                                                                                           | `gpt-4o`                           |
+| `OPENAI_MODEL`                      | **(Deprecated)** Use `AI_MODEL` instead. Still supported for backward compatibility                                                                                                                                                                                                      | `gpt-4o`                           |
 | `OPENAI_BASE_URL`                   | Endpoint URL for unofficial OpenAI-compatible APIs (e.g., LocalAI or text-generation-webui)                                                                                                                                                                                             | Default OpenAI API URL             |
 | `ASSISTANT_PROMPT`                  | A system message that sets the tone and controls the behavior of the assistant                                                                                                                                                                                                          | `You are a helpful assistant.`     |
 | `SHOW_USAGE`                        | Whether to show OpenAI token usage information after each response                                                                                                                                                                                                                      | `false`                            |
