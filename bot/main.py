@@ -23,6 +23,45 @@ def main():
     required_values = ['TELEGRAM_BOT_TOKEN']
     
     # Determine which AI provider API keys are needed based on the model
+cursor/configure-ai-models-to-use-gemini-and-fireworks-da07
+    model = os.environ.get('AI_MODEL', os.environ.get('OPENAI_MODEL', None))
+    
+    # Only require API keys if a model is specified
+    if model:
+        # Check for provider-specific API keys
+        if model.startswith('gpt-') or model.startswith('o1') or model.startswith('davinci') or model.startswith('text-'):
+            required_values.append('OPENAI_API_KEY')
+        elif model.startswith('gemini'):
+            required_values.append('GEMINI_API_KEY')
+        elif 'fireworks' in model or model.startswith('accounts/fireworks'):
+            required_values.append('FIREWORKS_API_KEY')
+        else:
+            # If model format is unclear, check which API keys are available
+            if os.environ.get('OPENAI_API_KEY'):
+                logging.info(f"Unknown model format '{model}', but OPENAI_API_KEY is available, assuming OpenAI model")
+            elif os.environ.get('GEMINI_API_KEY'):
+                logging.info(f"Unknown model format '{model}', but GEMINI_API_KEY is available, assuming Gemini model")
+            elif os.environ.get('FIREWORKS_API_KEY'):
+                logging.info(f"Unknown model format '{model}', but FIREWORKS_API_KEY is available, assuming Fireworks model")
+            else:
+                logging.error(f"Unknown model format '{model}' and no API keys found. Please set AI_MODEL to a supported model and provide the corresponding API key.")
+                exit(1)
+    else:
+        # No model specified, check which API keys are available and set default
+        if os.environ.get('OPENAI_API_KEY'):
+            model = 'gpt-4o'
+            logging.info("No AI_MODEL specified, defaulting to gpt-4o (OpenAI)")
+        elif os.environ.get('GEMINI_API_KEY'):
+            model = 'gemini-1.5-flash'
+            logging.info("No AI_MODEL specified, defaulting to gemini-1.5-flash (Google)")
+        elif os.environ.get('FIREWORKS_API_KEY'):
+            model = 'accounts/fireworks/models/llama-v3p1-8b-instruct'
+            logging.info("No AI_MODEL specified, defaulting to llama-v3p1-8b-instruct (Fireworks)")
+        else:
+            logging.error("No AI_MODEL specified and no API keys found. Please set AI_MODEL and provide the corresponding API key.")
+            logging.error("Example: AI_MODEL=gemini-1.5-flash and GEMINI_API_KEY=your_key")
+            exit(1)
+
     model = os.environ.get('AI_MODEL', 'gpt-4o')
     
     # Check for provider-specific API keys
@@ -35,6 +74,7 @@ def main():
     else:
         # Default to OpenAI if model format is unclear
         required_values.append('OPENAI_API_KEY')
+
     
     missing_values = [value for value in required_values if os.environ.get(value) is None]
     if len(missing_values) > 0:
@@ -42,8 +82,12 @@ def main():
         exit(1)
 
     # Setup configurations
+     cursor/configure-ai-models-to-use-gemini-and-fireworks-da07
+    # Model is already determined from the validation logic above
+
     # Use AI_MODEL instead of OPENAI_MODEL for generic model selection
     model = os.environ.get('AI_MODEL', os.environ.get('OPENAI_MODEL', 'gpt-4o'))
+
     functions_available = are_functions_available(model=model)
     max_tokens_default = default_max_tokens(model=model)
     
